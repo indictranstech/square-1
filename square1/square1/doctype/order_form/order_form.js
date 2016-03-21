@@ -206,16 +206,16 @@ calculation_for_other_item_qty = function(area,d){
 
 calculation_for_ceilling_item_qty = function(area,item_code,d){ 
 	frappe.call({
-        method: "square1.square1.doctype.order_form.order_form.get_ceillling_item_qty",
-        args: {
-            "area":area,
-            "item_code": item_code
-        },
-       	callback: function(r){
-	       	if(r.message){
-	       		d.qty = r.message
-	       		refresh_field("order_details")
-       		}
-       	}
+	        method: "square1.square1.doctype.order_form.order_form.get_ceillling_item_qty",
+	        args: {
+	            "area":area,
+	            "item_code": item_code
+	        },
+	       	callback: function(r){
+		       	if(r.message){
+		       		d.qty = r.message
+		       		refresh_field("order_details")
+	       		}
+	       	}
 	})
 }
