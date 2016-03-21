@@ -49,17 +49,6 @@ frappe.ui.form.on("Order Form", {
 			});
 		}
 	}
-	/*installation_type: function(frm, cdt, cdn) {
-		console.log("hello")
-		var row = locals[cdt][cdn];
-		if(row.installation_type) {
-			console.log("inside if")
-			frm.set_value("uom", {
-				"Wall Paper": "Roll",
-				"Flooring": "Box"
-				}[frm.doc.installation_type]);
-			}
-	}*/
 });
 
 make_quotation  = function() {
@@ -77,115 +66,6 @@ cur_frm.fields_dict['address'].get_query=function(doc){
 		}
 }
 
-
-
-/*frappe.ui.form.on("Order Form Details","installation_type", function(frm,cdt, cdn) {
-	var d = locals[cdt][cdn]
-	if(d.installation_type && d.installation_type == "Wall Paper"){
-		cur_frm.doc.order_details[0].uom = "Rolls"
-		refresh_field("order_details")
-	}
-	if(d.installation_type && d.installation_type == "Flooring"){
-		cur_frm.doc.order_details[0].uom = "Box"
-		refresh_field("order_details")
-	}
-	if(d.installation_type && d.installation_type == "Ceilling"){
-		cur_frm.doc.order_details[0].uom = "Pcs"
-		refresh_field("order_details")
-	}
-})*/
-
-cur_frm.fields_dict.order_details.grid.get_field("item_code").get_query = function(frm,cdt,cdn) {
-	var d = locals[cdt][cdn]
-	return {
-		filters: [
-			['Item','installation_type','=',d.installation_type]
-		]
-	}
-}
-
-frappe.ui.form.on("Order Form Details","length",function(frm,cdt,cdn){
-	var d  = locals[cdt][cdn];
-	if(d.width){
-		var width = d.width * 0.083333	
-		var length = d.length * 0.083333	
-		if(d.installation_type == "Ceilling" && d.item_code){
-			var item_code = d.item_code
-			d.site_dimension = width.toFixed(2) + "X" + length.toFixed(2) 
-			d.area = width.toFixed(2) * length.toFixed(2)
-			refresh_field("order_details")
-			var area = roundNumber(d.area)
-			calculation_for_ceilling_item_qty(area,item_code,d)
-		}	
-		else{
-			d.site_dimension = width.toFixed(2) + "X" + length.toFixed(2) 
-			d.area = width.toFixed(2) * length.toFixed(2)
-			refresh_field("order_details")
-			var area = roundNumber(d.area)
-			calculation_for_other_item_qty(area,d)
-		}
-	}	
-})
-
-frappe.ui.form.on("Order Form Details","width",function(frm,cdt,cdn){
-	var d  = locals[cdt][cdn];
-	if(d.length){
-		var width = d.width * 0.083333	
-		var length = d.length * 0.083333	
-		if(d.installation_type == "Ceilling" && d.item_code){
-			var item_code = d.item_code
-			d.site_dimension = width.toFixed(2) + "X" + length.toFixed(2) 
-			d.area = width.toFixed(2) * length.toFixed(2)
-			refresh_field("order_details")
-			var area = roundNumber(d.area)
-			calculation_for_ceilling_item_qty(area,item_code,d)
-		}	
-		else{
-			d.site_dimension = width.toFixed(2) + "X" + length.toFixed(2) 
-			d.area = width.toFixed(2) * length.toFixed(2)
-			refresh_field("order_details")
-			var area = roundNumber(d.area)
-			calculation_for_other_item_qty(area,d)
-		}
-	}	
-})
-
-calculation_for_other_item_qty = function(area,d){
-	var area_with_wastage = (area + ((area * 5) / 100)) / d.installation_area
-	console.log(area_with_wastage)
-	d.qty = Math.ceil(area_with_wastage)
-	refresh_field("order_details")
-}
-
-calculation_for_ceilling_item_qty = function(area,item_code,d){ 
-	frappe.call({
-        method: "square1.square1.doctype.order_form.order_form.get_ceillling_item_qty",
-        args: {
-            "area":area,
-            "item_code": item_code
-        },
-       	callback: function(r){
-	       	if(r.message){
-	       		d.qty = r.message
-	       		refresh_field("order_details")
-       		}
-       	}
-	})
-}
-
-/*cur_frm.fields_dict.order_details.grid.get_field("uom").get_query = function(doc,cdt,cdn) {
-	var d  = locals[cdt][cdn];
-	if(d.item_code){
-		return {
-			query: "square1.square1.doctype.order_form.order_form.get_uom_list",
-			filters: {
-				'installation_type': d.installation_type,
-				'item_code':d.item_code
-			}
-		}
-	}
-}*/
-
 cur_frm.fields_dict.order_details.grid.get_field("item_code").get_query = function(doc,cdt,cdn) {
 	var d = locals[cdt][cdn]
 	var t_list = []
@@ -202,7 +82,30 @@ cur_frm.fields_dict.order_details.grid.get_field("item_code").get_query = functi
 	}
 }
 
-frappe.ui.form.on("Order Form","order_date",function(frm){
+frappe.ui.form.on("Order Form",{
+	onload:function(frm){
+	this.fatch_value_of_phone_and_address(frm)	
+	},
+	company_name:function(frm){
+	this.fatch_value_of_phone_and_address(frm)
+	},
+	order_date:function(frm){
+		this.order_date_validation(frm)
+	},
+	installation_date:function(frm){
+		this.installation_date_validation(frm)
+	},
+	measurement_date:function(frm){
+		if(cur_frm.doc.order_date && cur_frm.doc.installation_date){
+			cur_frm.doc.order_date = ""
+			cur_frm.doc.installation_date = ""
+			refresh_field(["order_date","installation_date"])
+		}
+	}
+});
+
+
+order_date_validation = function(frm){
 	var order_date = new Date(cur_frm.doc.order_date)
 	var measurement_date = new Date(cur_frm.doc.measurement_date)
 	var installation_date = new Date(cur_frm.doc.installation_date)
@@ -216,9 +119,10 @@ frappe.ui.form.on("Order Form","order_date",function(frm){
 		cur_frm.doc.order_date = ""
 		refresh_field('order_date')
 	}		
-})
+}
 
-frappe.ui.form.on("Order Form","installation_date",function(frm){
+
+installation_date_validation = function(frm){
 	var order_date = new Date(cur_frm.doc.order_date)
 	var measurement_date = new Date(cur_frm.doc.measurement_date)
 	var installation_date = new Date(cur_frm.doc.installation_date)
@@ -227,16 +131,7 @@ frappe.ui.form.on("Order Form","installation_date",function(frm){
 		cur_frm.doc.installation_date = ""
 		refresh_field('installation_date')
 	}		
-})
-
-frappe.ui.form.on("Order Form",{
-	company_name:function(frm){
-	this.fatch_value_of_phone_and_address(frm)
-	},
-	onload:function(frm){
-	this.fatch_value_of_phone_and_address(frm)	
-	}
-});
+}
 
 fatch_value_of_phone_and_address = function(frm){ 
 	if(cur_frm.doc.company_name && (!cur_frm.doc.phone || !cur_frm.doc.address)){
@@ -264,4 +159,63 @@ fatch_value_of_phone_and_address = function(frm){
 		cur_frm.doc.phone = ""
 		refresh_field(["phone","address"])
 	}
+}
+
+
+frappe.ui.form.on("Order Form Details",{
+	length:function(frm,cdt,cdn){
+		var d = locals[cdt][cdn];
+		if(d.width){
+		this.calculate_area_dimension_and_qty(d)
+		}
+	},
+	width:function(frm,cdt,cdn){
+	var d = locals[cdt][cdn];
+		if(d.length){
+		this.calculate_area_dimension_and_qty(d)
+		}
+	},
+});
+
+calculate_area_dimension_and_qty = function(d){
+	var width = d.width * 0.083333	
+	var length = d.length * 0.083333	
+	if(d.installation_type == "Ceilling" && d.item_code){
+		var item_code = d.item_code
+		d.site_dimension = width.toFixed(2) + "X" + length.toFixed(2) 
+		d.area = width.toFixed(2) * length.toFixed(2)
+		refresh_field("order_details")
+		var area = roundNumber(d.area)
+		calculation_for_ceilling_item_qty(area,item_code,d)
+	}	
+	else{
+		d.site_dimension = width.toFixed(2) + "X" + length.toFixed(2) 
+		d.area = width.toFixed(2) * length.toFixed(2)
+		refresh_field("order_details")
+		var area = roundNumber(d.area)
+		calculation_for_other_item_qty(area,d)
+	}
+}
+
+calculation_for_other_item_qty = function(area,d){
+	var area_with_wastage = (area + ((area * 5) / 100)) / d.installation_area
+	console.log(area_with_wastage)
+	d.qty = Math.ceil(area_with_wastage)
+	refresh_field("order_details")
+}
+
+calculation_for_ceilling_item_qty = function(area,item_code,d){ 
+	frappe.call({
+        method: "square1.square1.doctype.order_form.order_form.get_ceillling_item_qty",
+        args: {
+            "area":area,
+            "item_code": item_code
+        },
+       	callback: function(r){
+	       	if(r.message){
+	       		d.qty = r.message
+	       		refresh_field("order_details")
+       		}
+       	}
+	})
 }

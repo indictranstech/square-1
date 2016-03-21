@@ -27,13 +27,11 @@ def get_lead(lead):
 
 @frappe.whitelist()
 def get_info_if_customer(customer):
-	print customer
 	information = {}
 	phone = frappe.db.get_value("Contact",{"customer":customer, "is_primary_contact":1}, "phone")
 	address = frappe.db.get_value("Address",{"customer":customer, "is_primary_address":1}, "name")
 	information['address'] = address
 	information['phone'] = phone
-	print information
 	return information
 
 
@@ -122,8 +120,12 @@ def get_uom_list(doctype, txt, searchfield, start, page_len, filters):
 @frappe.whitelist()
 def get_ceillling_item_qty(area,item_code):
 	area = int(area)
-	qty = frappe.db.sql("""select t1.qty from `tabCeilling Items`t1 where t1.item_code = '{0}' and t1.parent = "Ceilling Area" """.format(item_code),as_list=1)
-	fix_area_list = frappe.db.sql("""select value from `tabSingles` where doctype = "Ceilling Area" and field = "total_area" """,as_list=1) 
+	qty = frappe.db.sql("""select t1.qty from `tabCeilling Items`t1 
+							where t1.item_code = '{0}' 
+							and t1.parent = "Ceilling Area" """.format(item_code),as_list=1)
+	fix_area_list = frappe.db.sql("""select value from `tabSingles` 
+									where doctype = "Ceilling Area" 
+									and field = "total_area" """,as_list=1) 
 	fix_area = int(fix_area_list[0][0])
 	if qty[0][0] > 0:
 		qty = int(qty[0][0])
