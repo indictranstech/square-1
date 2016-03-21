@@ -178,7 +178,7 @@ frappe.ui.form.on("Order Form Details",{
 });
 
 calculate_area_dimension_and_qty = function(d){
-	var width = d.width * 0.083333	
+	var width = d.width * 0.083333	//change inches to feet
 	var length = d.length * 0.083333	
 	if(d.installation_type == "Ceilling" && d.item_code){
 		var item_code = d.item_code
