@@ -75,13 +75,10 @@ permission_query_conditions = {
 #	}
 # }
 doc_events = {
-	"Item Price": {
-		"on_update": "square1.customization.item_price.price_list_on_update"
-	},
-	"Item": {
-		"on_update": "square1.square1.doctype.ceilling_area.ceilling_area.add_ceilling_item"
-	}	
-}
+			"Item Price": {
+				"on_update": "square1.customization.item_price.price_list_on_update"
+				}
+			}
 # Scheduled Tasks
 # ---------------
 
